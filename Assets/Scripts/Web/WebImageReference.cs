@@ -9,8 +9,6 @@ using UnityEngine.XR.ARSubsystems;
 [RequireComponent(typeof(ARTrackedImageManager))]
 public class WebImageReference : WebResource
 {
-    public RawImage image;
-
     private ARTrackedImageManager _trackedImageManager;
 
     private void Awake()

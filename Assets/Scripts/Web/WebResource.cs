@@ -24,7 +24,7 @@ public abstract class WebResource : MonoBehaviour
 
     private DownloadState _state_;
 
-    public async Task<byte[]> DownloadData(string url)
+    protected async Task<byte[]> DownloadData(string url)
     {
         _state = DownloadState.Downloading;
         UnityWebRequest request = UnityWebRequest.Get(url);

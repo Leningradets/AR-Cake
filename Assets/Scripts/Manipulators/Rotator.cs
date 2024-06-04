@@ -16,8 +16,7 @@ public class Rotator : WebPrefabObjectManipulator
     {
         if (_input.IsRotating)
         {
-            _objecTransform.Rotate(_camera.transform.up, -_input.Rotation.x, Space.World);
-            _objecTransform.Rotate(_camera.transform.right, _input.Rotation.y, Space.World);
+            _objecTransform.Rotate(Vector3.up * -_input.Rotation.x);
         }
     }
 }

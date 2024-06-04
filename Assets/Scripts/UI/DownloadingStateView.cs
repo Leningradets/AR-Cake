@@ -6,19 +6,27 @@ using UnityEngine;
 
 public class DownloadingStateView : MonoBehaviour
 {
-    [SerializeField] private StatePanel _downloadingStatePanel;
-    [SerializeField] private StatePanel _connectionErrorStatePanel;
-    [SerializeField] private StatePanel _unknownErrorStatePanel;
-
+    private Dictionary<DownloadState, StatePanel> _statePanels = new Dictionary<DownloadState, StatePanel>();
+    private StatePanel _currentStatePanel;
     private WebResource[] _webResources;
 
     private void Awake()
     {
-        _webResources = FindObjectsOfType<WebResource>();
+        var panels = GetComponentsInChildren<StatePanel>(true);
+
+        foreach (var panel in panels)
+        {
+            if (_statePanels.TryAdd(panel.State, panel) == false)
+            {
+                Debug.LogWarning($"Duplicate state panel: {panel.State}, new panel was not added");
+            }
+        }
     }
 
     private void OnEnable()
     {
+        _webResources = FindObjectsOfType<WebResource>();
+        
         foreach (var resource in _webResources)
         {
             resource.StateChanged += OnStateChanged;
@@ -35,29 +43,38 @@ public class DownloadingStateView : MonoBehaviour
 
     private void OnStateChanged(DownloadState state)
     {
-        switch (state)
+        if (state == DownloadState.Downloaded && !CheckAllWebResourcesDownloaded())
         {
-            case DownloadState.Downloading:
-                _connectionErrorStatePanel.Close();
-                _downloadingStatePanel.Open();
-                break;
-            case DownloadState.Downloaded:
-                if (CheckAllWebResourcesDownloaded())
-                {
-                    _downloadingStatePanel.Close();
-                }
-                break;
-            case DownloadState.ConnectionError:
-                _downloadingStatePanel.Close();
-                _connectionErrorStatePanel.Open();
-                break;
-            case DownloadState.Error:
-                _unknownErrorStatePanel.Open();
-                break;
+            CloseCurrentPanel();
+            return;
         }
-
+        
+        if (_statePanels.TryGetValue(state, out var panel))
+        {
+            OpenPanel(panel);
+        }
     }
 
+    private void OpenPanel(StatePanel panel)
+    {
+        if (_currentStatePanel != null)
+        {
+            _currentStatePanel.Close();
+        }
+        
+        panel.Open();
+        _currentStatePanel = panel;
+    }
+    
+    private void CloseCurrentPanel()
+    {
+        if (_currentStatePanel != null)
+        {
+            _currentStatePanel.Close();
+            _currentStatePanel = null;
+        }
+    }
+    
     private bool CheckAllWebResourcesDownloaded()
     {
         foreach (var resource in _webResources)
